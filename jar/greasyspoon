@@ -85,7 +85,7 @@ start() {
     # don't need to check if already running, that is done by caller. Just launch it
     $JAVA_HOME/bin/java -server $GS_OPTIONS -jar ${classname}${ext} $* & echo $! > ${pidpath}${pid}
     RETVAL=$?
-    if [ "$RETVAL" == "0" ]; then 
+    if [ $RETVAL = "0" ]; then 
         echo "server started."
     else 
         echo "...aborted."
@@ -100,7 +100,7 @@ stop() {
     kill -15 `cat ${pidpath}${pid}`
     rm ${pidpath}${pid}
     RETVAL=$?
-    if [ "$RETVAL" == "0" ]; then 
+    if [ $RETVAL = "0" ]; then 
         echo "server stopped."
     else 
         echo "...aborted."
@@ -112,10 +112,10 @@ stop() {
 #////////////////////////////////////////////
 reload() {
     echo -n "Reloading greasyspoon..."
-    if [ "$daemon" == "true" ]; then
-        /bin/kill -HUP `cat $pidpath$pid` > /dev/null
+    if [ $daemon = "true" ]; then
+        kill -HUP `cat ${pidpath}${pid}` > /dev/null
         RETVAL=$?
-        if [ $RETVAL = 0 ]; then 
+        if [ $RETVAL = "0" ]; then 
             echo "done."
         else 
             echo "failed."
@@ -123,6 +123,7 @@ reload() {
         return $RETVAL;
     else 
       stop
+      sleep 1	
       start
     fi
 }
@@ -133,7 +134,7 @@ Status() {
     if [ -e $pidpath$pid ] ; then
         kill -0 `cat $pidpath$pid` &> /dev/null 
         RETVAL=$?
-        if [ $RETVAL = 0 ]; then 
+        if [ $RETVAL = "0" ]; then 
             return "1"
         else 
             return "0"
@@ -168,21 +169,23 @@ running=$?
 case "$1" in
   #////////////////////////////////////////////
   start)
-       if [ $running = 0 ]; then 
+       if [ $running = "0" ]; then 
         start
         RETVAL=$?
+       else
+       echo "$classname already running"
        fi
 	;;
   #////////////////////////////////////////////
   stop)
-    if [ $running = 1 ]; then 
+    if [ $running = "1" ]; then 
         stop
         RETVAL=$?
     fi
 	;;
   #////////////////////////////////////////////
   halt)
-  	if [ $running = 1 ] ; then
+  	if [ $running = "1" ] ; then
   		echo -n "Halting $classname..... "
 		kill -9 `cat $pidpath$pid`
 		rm $pidpath$pid
@@ -194,11 +197,12 @@ case "$1" in
   #////////////////////////////////////////////
   restart)
   	$0 stop
+	sleep 1
 	$0 start
 	;;
   #////////////////////////////////////////////
   reload)
-	if [ $running = 1 ]; then 
+	if [ $running = "1" ]; then 
         reload
         RETVAL=$?
     fi
@@ -215,7 +219,7 @@ case "$1" in
 	;;
   #////////////////////////////////////////////
   status)
-  	if [ $running = 1 ]; 
+  	if [ $running = "1" ]; 
       then 
         echo "$classname is alive."
       else
